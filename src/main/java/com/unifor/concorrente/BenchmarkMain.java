@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 
 public class BenchmarkMain {
 
-    // 1. Criamos constantes indicando a pasta e o caminho novo do arquivo
+    // 1. Resultados gerados em CSV
     private static final String OUTPUT_DIR = "resultados";
     private static final String CSV_FILE = OUTPUT_DIR + "/resultados_benchmark.csv";
 
@@ -28,8 +28,7 @@ public class BenchmarkMain {
 
             String[] arquivos = {"texto_pequeno.txt", "texto_medio.txt", "texto_grande.txt"};
             String[] nomesTamanhos = {"01. Pequeno (1MB)", "02. Medio (10MB)", "03. Grande (50MB)"};
-
-            // O FileWriter agora aponta para a pasta resultados/
+            
             FileWriter csvWriter = new FileWriter(CSV_FILE);
             csvWriter.append("Arquivo,Tamanho,Metodo,Amostra,Contagem,TempoMS\n");
 
