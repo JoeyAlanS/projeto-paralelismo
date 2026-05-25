@@ -1,0 +1,13 @@
+Arquivo,Tamanho,Metodo,Amostra,Contagem,TempoMS
+texto_pequeno.txt,01. Pequeno (1MB),Serial,1,14000,4
+texto_pequeno.txt,01. Pequeno (1MB),Serial,2,14000,3
+texto_pequeno.txt,01. Pequeno (1MB),Serial,3,14000,2
+texto_pequeno.txt,01. Pequeno (1MB),CPU_2_Threads,1,14000,13
+texto_pequeno.txt,01. Pequeno (1MB),CPU_2_Threads,2,14000,7
+texto_pequeno.txt,01. Pequeno (1MB),CPU_2_Threads,3,14000,8
+texto_pequeno.txt,01. Pequeno (1MB),CPU_4_Threads,1,14000,1
+texto_pequeno.txt,01. Pequeno (1MB),CPU_4_Threads,2,14000,1
+texto_pequeno.txt,01. Pequeno (1MB),CPU_4_Threads,3,14000,1
+texto_pequeno.txt,01. Pequeno (1MB),CPU_8_Threads,1,14000,10
+texto_pequeno.txt,01. Pequeno (1MB),CPU_8_Threads,2,14000,1
+texto_pequeno.txt,01. Pequeno (1MB),CPU_8_Threads,3,14000,1

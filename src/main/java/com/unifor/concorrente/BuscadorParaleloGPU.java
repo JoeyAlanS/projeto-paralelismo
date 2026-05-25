@@ -3,51 +3,53 @@ package com.unifor.concorrente;
 import org.jocl.*;
 import static org.jocl.CL.*;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class BuscadorParaleloGPU {
-    // Código em C OpenCL/GPU
+    // Código padrão em C OpenCL/GPU (fallback caso kernel_busca.cl não exista)
     private static final String KERNEL_SRC =
             "__kernel void contar_palavra(__global const char* texto, int textoLen, " +
                     "                             __global const char* palavra, int palavraLen, " +
                     "                             __global int* resultado) {" +
                     "    int gid = get_global_id(0);" +
                     "    if (gid + palavraLen > textoLen) return;" +
-                    "    " +
-                    "    bool igual = true;" +
                     "    for (int i = 0; i < palavraLen; i++) {" +
-                    "        if (texto[gid + i] != palavra[i]) {" +
-                    "            igual = false;" +
-                    "            break;" +
-                    "        }" +
+                    "        if (texto[gid + i] != palavra[i]) return;" +
                     "    }" +
-                    "    " +
-                    "    if (igual) {" +
-                    "        // Validação de fronteira para garantir palavra inteira isolada\n" +
-                    "        if (gid > 0) {" +
-                    "            char p = texto[gid - 1];" +
-                    "            if ((p >= 'a' && p <= 'z') || (p >= 'A' && p <= 'Z') || (p >= '0' && p <= '9')) {" +
-                    "                igual = false;" +
-                    "            }" +
-                    "        }" +
-                    "        if (gid + palavraLen < textoLen) {" +
-                    "            char n = texto[gid + palavraLen];" +
-                    "            if ((n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') || (n >= '0' && n <= '9')) {" +
-                    "                igual = false;" +
-                    "            }" +
-                    "        }" +
+                    "    if (gid > 0) {" +
+                    "        char p = texto[gid - 1];" +
+                    "        if ((p >= 'a' && p <= 'z') || (p >= 'A' && p <= 'Z') || (p >= '0' && p <= '9')) return;" +
                     "    }" +
-                    "    " +
-                    "    if (igual) {" +
-                    "        atomic_inc(resultado);" + // Operação atômica segura na GPU
+                    "    if (gid + palavraLen < textoLen) {" +
+                    "        char n = texto[gid + palavraLen];" +
+                    "        if ((n >= 'a' && n <= 'z') || (n >= 'A' && n <= 'Z') || (n >= '0' && n <= '9')) return;" +
                     "    }" +
+                    "    atomic_inc(resultado);" +
                     "}";
+
+    private static String carregarKernel() {
+        Path p = Paths.get("kernel_busca.cl");
+        if (Files.exists(p)) {
+            try {
+                return Files.readString(p, StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                System.err.println("Falha ao ler kernel_busca.cl: " + e.getMessage());
+            }
+        }
+        return KERNEL_SRC;
+    }
 
     public static int contar(String texto, String palavraAlvo) {
         // Normalização
         String textoMinusculo = texto.toLowerCase();
         String palavraMinuscula = palavraAlvo.toLowerCase();
 
-        byte[] textoBytes = textoMinusculo.getBytes();
-        byte[] palavraBytes = palavraMinuscula.getBytes();
+        byte[] textoBytes = textoMinusculo.getBytes(StandardCharsets.UTF_8);
+        byte[] palavraBytes = palavraMinuscula.getBytes(StandardCharsets.UTF_8);
 
         int textoLen = textoBytes.length;
         int palavraLen = palavraBytes.length;
@@ -79,7 +81,9 @@ public class BuscadorParaleloGPU {
         cl_mem memPalavra = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, Sizeof.cl_char * palavraLen, Pointer.to(palavraBytes), null);
         cl_mem memResultado = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, Sizeof.cl_int, Pointer.to(resultadoArray), null);
 
-        cl_program program = clCreateProgramWithSource(context, 1, new String[]{KERNEL_SRC}, null, null);
+        String kernelSource = carregarKernel();
+
+        cl_program program = clCreateProgramWithSource(context, 1, new String[]{kernelSource}, null, null);
         clBuildProgram(program, 0, null, null, null, null);
 
         cl_kernel kernel = clCreateKernel(program, "contar_palavra", null);
