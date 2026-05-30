@@ -6,35 +6,39 @@ import java.nio.file.Paths;
 
 public class BenchmarkMain {
 
-    // 1. Resultados gerados em CSV
+    // Resultados gerados em CSV dentro da pasta resultados
     private static final String OUTPUT_DIR = "resultados";
     private static final String CSV_FILE = OUTPUT_DIR + "/resultados_benchmark.csv";
 
-    private static final String PALAVRA_ALVO = "java";
+    private static final String PALAVRA_ALVO = "the";
 
     public static void main(String[] args) {
         try {
-            System.out.println("=== SISTEMA DE BENCHMARK CORE AUTOMATIZADO ===");
+            System.out.println("=== SISTEMA DE BENCHMARK CORE AUTOMATIZADO (LIVROS REAIS) ===");
 
-            // 2. Criação automática da pasta de resultados
             File dir = new File(OUTPUT_DIR);
             if (!dir.exists()) {
-                dir.mkdirs(); // Cria a pasta se ela não existir
+                dir.mkdirs();
                 System.out.println("Diretório '" + OUTPUT_DIR + "' criado com sucesso para o CSV.");
             }
 
-            // Arquivos de teste de tamanhos variados
-            inicializarTextosAmostra();
+            String[] arquivos = {"Dracula.txt", "MobyDick.txt", "DonQuixote.txt"};
+            String[] nomesTamanhos = {"01. Dracula (890KB)", "02. Moby Dick (1.2MB)", "03. Don Quixote (2.12MB)"};
 
-            String[] arquivos = {"texto_pequeno.txt", "texto_medio.txt", "texto_grande.txt"};
-            String[] nomesTamanhos = {"01. Pequeno (1MB)", "02. Medio (10MB)", "03. Grande (50MB)"};
-            
             FileWriter csvWriter = new FileWriter(CSV_FILE);
             csvWriter.append("Arquivo,Tamanho,Metodo,Amostra,Contagem,TempoMS\n");
 
             for (int i = 0; i < arquivos.length; i++) {
                 String caminho = arquivos[i];
                 String tamanhoNome = nomesTamanhos[i];
+
+                // Verifica se os arquivos dos livros realmente estão na raiz do projeto
+                File fileCheck = new File(caminho);
+                if (!fileCheck.exists()) {
+                    System.err.println("[ERRO CRÍTICO] O arquivo " + caminho + " não foi encontrado na raiz do projeto!");
+                    continue;
+                }
+
                 System.out.println("\n--------------------------------------------------");
                 System.out.println("Processando base de dados: " + tamanhoNome);
 
@@ -84,7 +88,6 @@ public class BenchmarkMain {
             csvWriter.close();
             System.out.println("\n[SUCESSO] Base estatística exportada para: " + CSV_FILE);
 
-            // Abre a janela Swing com os gráficos apontando para a nova pasta do CSV
             javax.swing.SwingUtilities.invokeLater(() -> {
                 VisualizadorGraficos appGrafico = new VisualizadorGraficos(CSV_FILE);
                 appGrafico.setVisible(true);
@@ -92,26 +95,6 @@ public class BenchmarkMain {
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    private static void inicializarTextosAmostra() throws IOException {
-        String[] arquivos = {"texto_pequeno.txt", "texto_medio.txt", "texto_grande.txt"};
-        int[] multiplicadores = {14000, 140000, 700000}; // Produz ~1MB, ~10MB e ~50MB
-
-        for (int i = 0; i < arquivos.length; i++) {
-            File f = new File(arquivos[i]);
-            if (!f.exists()) {
-                System.out.println("Criando massa de dados inicial automatizada: " + arquivos[i]);
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(f))) {
-                    for (int k = 0; k < multiplicadores[i]; k++) {
-                        bw.write("java computacao concorrente unifor cct threads paralelismo opencl gpu amd nvidia intel. ");
-                        if (k % 7 == 0) {
-                            bw.write("texto aleatorio apenas para preenchimento de espaco e analise de desempenho estruturado. ");
-                        }
-                    }
-                }
-            }
         }
     }
 }
